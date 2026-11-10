@@ -4,8 +4,17 @@ import io
 import time
 import urllib.parse
 import requests
-import qrcode
-from PIL import Image, ImageDraw
+
+try:
+    import qrcode
+    from PIL import Image, ImageDraw
+    QRCODE_AVAILABLE = True
+except ImportError:
+    qrcode = None
+    Image = None
+    ImageDraw = None
+    QRCODE_AVAILABLE = False
+
 import config
 
 DEFAULT_GATEWAY_URL = getattr(config, "BAKONG_GATEWAY_URL", "https://lorndavid.online").rstrip("/")
@@ -195,6 +204,9 @@ def create_khqr_card(qr_string: str, amount_str: str, merchant_name: str, accoun
     """
     Renders a branded KHQR card with red banner, QR code, merchant name, and amount.
     """
+    if not QRCODE_AVAILABLE or qrcode is None or Image is None:
+        raise RuntimeError("qrcode and Pillow are required to generate KHQR card images. Please ensure requirements.txt is installed.")
+
     qr = qrcode.QRCode(
         version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
