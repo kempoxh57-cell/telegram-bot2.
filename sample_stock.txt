@@ -1,0 +1,11 @@
+# Sample Stock File
+# You can copy-paste lines like these directly in Telegram to the bot when adding stock
+# Format can be email:password:recovery or any format you prefer:
+
+john.doe2021@gmail.com:StrongPassword123!:recovery_mail1@outlook.com
+sarah.connor1995@gmail.com:PassW0rdSecure!:recovery_mail2@yahoo.com
+alex.gaming99@gmail.com:GamerPass789!:recovery_mail3@gmail.com
+
+# For Facebook accounts:
+100084729182341|MyFbPass!2024|2FA_SECRET_KEY_HERE|cookies_or_token_here
+100092837461928|AnotherFbPass99|2FA_SECRET_KEY_HERE|cookies_or_token_here
