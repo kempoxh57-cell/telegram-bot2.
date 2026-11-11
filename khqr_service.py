@@ -91,12 +91,7 @@ def check_gateway_health(gateway_url: str = None) -> dict:
 
 def check_bakong_transaction(md5_hash: str, token: str = "", gateway_url: str = None) -> dict:
     """
-    Checks the NBC Bakong payment settlement status by MD5 hash using:
-    1. Primary: LuyRiel Bakong KHQR Gateway API (https://www.lorndavid.online/docs)
-       Endpoint: GET /api/v1/check/{md5}
-       responseCode == 0 -> Confirmed on NBC ledger.
-       responseCode == 1 -> Pending / unconfirmed.
-    2. Fallback: Official NBC Bakong Open API (if BAKONG_API_TOKEN is provided)
+    Checks the NBC Bakong payment settlement status by MD5 hash.
     """
     if not md5_hash or not md5_hash.strip():
         return {"paid": False, "error": "MD5_HASH_REQUIRED"}
@@ -178,7 +173,7 @@ def generate_deeplink(qr_string: str) -> str:
 def generate_khqr_data(account_id: str, merchant_name: str, amount: float, currency: str = "USD", bill_number: str = "", gateway_url: str = None) -> dict:
     """
     Generates dynamic KHQR payment string, MD5 settlement hash, and 1-tap deep link.
-    Uses pure Python EMVCo KHQR generation (zero external Node.js dependencies).
+    100% Pure Python implementation (no Node.js dependency).
     """
     bill_no = bill_number or f"DEP{int(time.time()) % 100000}"
     clean_account = (account_id or "").strip()
@@ -188,7 +183,7 @@ def generate_khqr_data(account_id: str, merchant_name: str, amount: float, curre
 
     try:
         now_ms = int(time.time() * 1000)
-        exp_ms = now_ms + (3600 * 1000)  # 1 hour expiration
+        exp_ms = now_ms + (3600 * 1000)
 
         # 00: Payload Format Indicator (01)
         out = _emv_format("00", "01")
@@ -239,33 +234,6 @@ def generate_khqr_data(account_id: str, merchant_name: str, amount: float, curre
             "source": "native_python"
         }
     except Exception as e:
-        # Fallback to Gateway API if native generation fails
-        base_gw = (gateway_url or DEFAULT_GATEWAY_URL).rstrip("/")
-        try:
-            gw_payload = {
-                "accountId": clean_account,
-                "merchantName": clean_name,
-                "merchantCity": clean_city,
-                "amount": float(amount),
-                "currency": curr_upper,
-                "billNumber": bill_no,
-                "storeLabel": "Telegram Bot"
-            }
-            r = requests.post(f"{base_gw}/api/v1/khqr/generate", json=gw_payload, headers=DEFAULT_HEADERS, timeout=6)
-            if r.status_code == 200:
-                data = r.json()
-                qr_str = data.get("qrString") or data.get("qr")
-                md5_str = data.get("md5")
-                if qr_str and md5_str:
-                    return {
-                        "qr": qr_str,
-                        "md5": md5_str,
-                        "deeplink": data.get("deeplink") or generate_deeplink(qr_str),
-                        "billNumber": bill_no,
-                        "source": "gateway"
-                    }
-        except Exception:
-            pass
         raise RuntimeError(f"KHQR generation failed: {e}")
 
 def create_khqr_card(qr_string: str, amount_str: str, merchant_name: str, account_id: str) -> io.BytesIO:
